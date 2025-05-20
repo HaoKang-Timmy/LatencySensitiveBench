@@ -211,7 +211,7 @@ def agent_loop(agent_id: str, robot, shared):
     while not shared["done"]:
         actions = shared["actions"]
         if agent_id not in actions:
-            if not connect_flag and robot.serving_type == "remote":
+            if not connect_flag and robot.serving_method == "remote":
                 robot.connect_socket()
                 connect_flag = True
             start = time.time()
@@ -222,6 +222,7 @@ def agent_loop(agent_id: str, robot, shared):
             
         obs = shared.get("observation")
         reward = shared.get("reward")
+        action = shared["actions"].get(agent_id, 0)  # fallback to 0
         if obs is not None:
-            robot.observe(obs, dict(actions), reward)
+            robot.observe(obs, {agent_id: action}, reward)
         time.sleep(0.001)

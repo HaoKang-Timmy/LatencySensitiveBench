@@ -205,57 +205,7 @@ class Game:
             except:
                 pass
             return 0
-            while True:
-                if self.render:
-                    self.env.render()
-                    
-                actions = self.actions
-                time.sleep(0.001)
-                
-                if "agent_0" not in actions:
-                    actions["agent_0"] = 0
-                if "agent_1" not in actions:
-                    actions["agent_1"] = 0
-                    
-                observation, reward, terminated, truncated, info = self.env.step(
-                    actions
-                )
-                
-                if "agent_0" in self.actions:
-                    del actions["agent_0"]
-                if "agent_1" in self.actions:
-                    del actions["agent_1"]
-                    
-                self.observation = observation
-                self.reward += reward
-                
-                p1_wins = observation["P1"]["wins"][0]
-                p2_wins = observation["P2"]["wins"][0]
-                
-                if p1_wins == 1 or p2_wins == 1:
-                    player1_thread.running = False
-                    player2_thread.running = False
-                    
-                    episode.player_1_won = p1_wins == 1
-                    
-                    if episode.player_1_won:
-                        print(
-                            f"[red] Player1 {self.player_1.robot.model} '{self.player_1.nickname}' won!"
-                        )
-                        logger.info(f"[red]Player1 {self.player_1.robot.model} '{self.player_1.nickname}' won!")
-                    else:
-                        print(
-                            f"[green] Player2 {self.player_2.robot.model} {self.player_2.nickname} won!"
-                        )
-                        logger.info(f"[green] Player2 {self.player_2.robot.model} {self.player_2.nickname} won!")
-                        
-                    # episode.save()
-                    self.env.close()
-                    
-                    player1_time_list = player1_thread.join()
-                    player2_time_list = player2_thread.join()
-                    
-                    return episode.player_1_won
+          
                 
         except Exception as e:
             # self.env.close()
