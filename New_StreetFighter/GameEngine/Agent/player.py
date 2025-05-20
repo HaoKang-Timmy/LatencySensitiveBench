@@ -204,3 +204,24 @@ class PlanAndActPlayer2(PlanAndAct):
                     f"Player 2 average time: {sum(player_2) / len(player_2)}"
                 )
                 break
+            
+def agent_loop(agent_id: str, robot, shared):
+    connect_flag = False
+    time_list = []
+    while not shared["done"]:
+        actions = shared["actions"]
+        if agent_id not in actions:
+            if not connect_flag and robot.serving_type == "remote":
+                robot.connect_socket()
+                connect_flag = True
+            start = time.time()
+            robot.plan()
+            actions[agent_id] = robot.act()
+            end = time.time()
+            time_list.append(end - start)
+            
+        obs = shared.get("observation")
+        reward = shared.get("reward")
+        if obs is not None:
+            robot.observe(obs, dict(actions), reward)
+        time.sleep(0.001)
