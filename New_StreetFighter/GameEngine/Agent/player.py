@@ -13,11 +13,15 @@ from .share_episode import Episode
 import time
 
 
+
 class Player:
     nickname: str
     model: str
     robot: Optional[Robot] = None
+    serving_method: str
     temperature: float = 0.7
+    device: str = "cuda"
+
 
     def verify_provider_name(self):
         if self.model.startswith("openai"):
@@ -73,6 +77,7 @@ class Player1(Player):
             model=self.model,
             player_nb=1,
             socket_config=socket_config,
+            serving_method=serving_method,
             )
         self.verify_provider_name()
         

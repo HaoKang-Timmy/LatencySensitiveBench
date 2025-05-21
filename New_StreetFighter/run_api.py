@@ -14,7 +14,7 @@ def main():
     parser.add_argument(
         "--serving-choice",
         type=str,
-        choices=["local", "remote", "api"],
+        choices=["vllm", "remote", "api","sglang","huggingface"],
         default="local",
         help="Serving mode: local, remote, or api"
     )

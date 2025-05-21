@@ -184,57 +184,110 @@ class Robot(metaclass=abc.ABCMeta):
             # Choose a random int from the list of moves
             logger.debug("DISABLE_LLM is True, returning a random move")
             return [random.choice(list(MOVES.values()))]
+        if self.serving_method == "api":
+            while len(valid_moves) == 0:
+                llm_stream = self.call_llm()
 
-        while len(valid_moves) == 0:
-            llm_stream = self.call_llm()
+                # adding support for streaming the response
+                # this should make the players faster!
 
-            # adding support for streaming the response
-            # this should make the players faster!
-
-            llm_response = ""
-            
-            for r in llm_stream:
-                # print(r.delta, end="")
+                llm_response = ""
                 
-                llm_response += r.delta
-                # print("resp",llm_response)
-                
+                for r in llm_stream:
+                    # print(r.delta, end="")
+                    
+                    llm_response += r.delta
+                    # print("resp",llm_response)
+                    
 
-                # The response is a bullet point list of moves. Use regex
-                matches = re.findall(r"- ([\w ]+)", llm_response)
-                moves = ["".join(match) for match in matches]
-                invalid_moves = []
-                valid_moves = []
+                    # The response is a bullet point list of moves. Use regex
+                    matches = re.findall(r"- ([\w ]+)", llm_response)
+                    moves = ["".join(match) for match in matches]
+                    invalid_moves = []
+                    valid_moves = []
 
-                for move in moves:
-                    cleaned_move_name = move.strip().lower()
-                    if cleaned_move_name in META_INSTRUCTIONS_WITH_LOWER.keys():
-                        if self.player_nb == 1:
-                            print(
+                    for move in moves:
+                        cleaned_move_name = move.strip().lower()
+                        if cleaned_move_name in META_INSTRUCTIONS_WITH_LOWER.keys():
+                            if self.player_nb == 1:
+                                print(
+                                    f"[red] Player {self.player_nb} move: {cleaned_move_name}"
+                                )
+                                logger.info(f"[red] Player {self.player_nb} move: {cleaned_move_name}")
+                            elif self.player_nb == 2:
+                                print(
+                                    f"[green] Player {self.player_nb} move: {cleaned_move_name}"
+                                )
+                                logger.info(f"[green] Player {self.player_nb} move: {cleaned_move_name}")
+                            valid_moves.append(cleaned_move_name)
+                        else:
+                            logger.debug(f"Invalid completion: {move}")
+                            logger.info(f"Invalid completion: {move}")
+                            logger.debug(f"Cleaned move name: {cleaned_move_name}")
+                            invalid_moves.append(move)
+
+                    if len(invalid_moves) > 1:
+                        logger.warning(f"Many invalid moves: {invalid_moves}")
+                        logger.info(f"Many invalid moves: {invalid_moves}")
+
+                logger.debug(f"Next moves: {valid_moves}")
+                return valid_moves
+        elif self.serving_method == "huggingface":
+            result = self.call_llm_local()
+            matches = re.findall(r"- ([\w ]+)", result)
+            moves = ["".join(match) for match in matches]
+            invalid_moves = []
+            valid_moves = []
+            for move in moves:
+                cleaned_move_name = move.strip().lower()
+                if cleaned_move_name in META_INSTRUCTIONS_WITH_LOWER.keys():
+                    if self.player_nb == 1:
+                        print(
                                 f"[red] Player {self.player_nb} move: {cleaned_move_name}"
                             )
-                            logger.info(f"[red] Player {self.player_nb} move: {cleaned_move_name}")
-                        elif self.player_nb == 2:
+                    elif self.player_nb == 2:
                             print(
                                 f"[green] Player {self.player_nb} move: {cleaned_move_name}"
                             )
-                            logger.info(f"[green] Player {self.player_nb} move: {cleaned_move_name}")
-                        valid_moves.append(cleaned_move_name)
-                    else:
-                        logger.debug(f"Invalid completion: {move}")
-                        logger.info(f"Invalid completion: {move}")
-                        logger.debug(f"Cleaned move name: {cleaned_move_name}")
-                        invalid_moves.append(move)
-
+                    valid_moves.append(cleaned_move_name)
+                else:
+                    logger.debug(f"Invalid completion: {move}")
+                    logger.debug(f"Cleaned move name: {cleaned_move_name}")
+                    invalid_moves.append(move)
                 if len(invalid_moves) > 1:
                     logger.warning(f"Many invalid moves: {invalid_moves}")
-                    logger.info(f"Many invalid moves: {invalid_moves}")
-
-            logger.debug(f"Next moves: {valid_moves}")
+                logger.debug(f"Next moves: {valid_moves}")
+                logger.info(f"Next moves: {valid_moves}")
             return valid_moves
-
+            
         return []
-    
+
+    def call_llm_local(
+        self,
+        max_tokens: int = 100,
+        top_p: float = 1.0,
+    ):
+        move_list = "- " + "\n - ".join([move for move in META_INSTRUCTIONS])
+        prompt_template = [
+            {"role": "system", "content": BACKGROUND(self.character) + HINT_KEN()},
+            {
+                "role": "user",
+                "content": PROMPT_KEN(move_list, self.context_prompt())
+                + "\nYour Response:\n",
+            },
+        ]
+        prompt = self.tokenizer(
+            prompt_template,
+            return_tensors="pt",
+        )
+        # Generate the response
+        ####TODO output setting
+        response = self.local_model.generate(
+            **prompt,
+        )
+        generate_tokens = response.sequences[:, prompt["input_ids"].shape[-1]:]
+        text = self.tokenizer.decode(generate_tokens[0], skip_special_tokens=True)
+        return text
     @abc.abstractmethod
     def call_llm(
         self,
@@ -264,6 +317,12 @@ class Robot(metaclass=abc.ABCMeta):
         pass
     
 class TextRobot(Robot):
+    def init_local_model(self):
+        if self.serving_method == "huggingface":
+            from transformers import AutoTokenizer, AutoModelForCausalLM
+            self.tokenizer = AutoTokenizer.from_pretrained(self.model)
+            self.local_model = AutoModelForCausalLM.from_pretrained(self.model)
+        
     def observe(self, observation: dict, actions: dict, reward: float):
         """
         The robot will observe the environment by calling this method.
@@ -405,22 +464,7 @@ To increase your score, move toward the opponent and attack the opponent. To pre
 
         # Generate the prompts
         move_list = "- " + "\n - ".join([move for move in META_INSTRUCTIONS])
-#         system_prompt = f"""You are the best and most aggressive Street Fighter III 3rd strike player in the world.
-# Your character is {self.character}. Your goal is to beat the other opponent. You respond with a bullet point list of moves.
-# {self.context_prompt()}
-# The moves you can use are:
-# {move_list}
-# ----
-# Reply with a bullet point list of moves. The format should be: `- <name of the move>` separated by a new line.
-# Example if the opponent is close:
-# - Move closer
-# - Medium Punch
 
-# Example if the opponent is far:
-# - Fireball
-# - Move closer"""
-
-        # start_time = time.time()
 
         client = get_client(self.model, temperature=self.temperature)
 
