@@ -147,9 +147,7 @@ class Game:
             self.player_1.robot.observe(self.observation, {}, 0.0)
             self.player_2.robot.observe(self.observation, {}, 0.0)
             episode = Episode(player_1=self.player_1, player_2=self.player_2)
-            player1_thread = PlanAndActPlayer1(game=self, episode=episode, serving_type=self.player_1.robot.serving_method)
-            
-            player2_thread = PlanAndActPlayer2(game=self, episode=episode, serving_type=self.player_2.robot.serving_method)
+
             #### TODO need to be changed
             p1_proc = Process(target=agent_loop, args=("agent_0", self.player_1.robot, shared))
             p2_proc = Process(target=agent_loop, args=("agent_1", self.player_2.robot, shared))
