@@ -63,6 +63,25 @@ class Game:
         self.player_1 = player_1
         self.player_2 = player_2
         
+        self.manager = Manager()
+        self.shared = self.manager.dict()
+        self.shared["actions"] = self.manager.dict()
+        self.shared["reward"] = 0.0
+        self.shared["observation"] = self.observation
+        self.shared["done"] = False
+        self.shared["start"] = False
+        
+        self.actions = {
+            "agent_0": 0,
+            "agent_1": 0,
+        }
+        self.reward = 0.0
+        
+        self.p1_proc = Process(target=agent_loop, args=("agent_0", self.player_1, self.shared))
+        self.p2_proc = Process(target=agent_loop, args=("agent_1", self.player_2, self.shared))
+        self.p1_proc.start()
+        self.p2_proc.start()
+        
     def _init_settings(self) -> EnvironmentSettingsMultiAgent:
         """
         Initializes the settings for the game.
@@ -131,37 +150,40 @@ class Game:
         
     def run(self):
         try:
-            manager = Manager()
-            shared = manager.dict()
-            shared["actions"] = manager.dict()
-            shared["reward"] = 0.0
-            shared["observation"] = self.observation
-            shared["done"] = False
+            # manager = Manager()
+            # shared = manager.dict()
+            # shared["actions"] = manager.dict()
+            # shared["reward"] = 0.0
+            # shared["observation"] = self.observation
+            # shared["done"] = False
             
-            self.actions = {
-                "agent_0": 0,
-                "agent_1": 0,
-            }
-            self.reward = 0.0
-            
-            self.player_1.robot.observe(self.observation, {}, 0.0)
-            self.player_2.robot.observe(self.observation, {}, 0.0)
+            # self.actions = {
+            #     "agent_0": 0,
+            #     "agent_1": 0,
+            # }
+            # self.reward = 0.0
+            self.shared["observation"] = self.observation
+            # self.player_1.robot.observe(self.observation, {}, 0.0)
+            # self.player_2.robot.observe(self.observation, {}, 0.0)
             episode = Episode(player_1=self.player_1, player_2=self.player_2)
 
             #### TODO need to be changed
-            p1_proc = Process(target=agent_loop, args=("agent_0", self.player_1.robot, shared))
-            p2_proc = Process(target=agent_loop, args=("agent_1", self.player_2.robot, shared))
-            p1_proc.start()
-            p2_proc.start()
+            # p1_proc = Process(target=agent_loop, args=("agent_0", self.player_1.robot, shared))
+            # p2_proc = Process(target=agent_loop, args=("agent_1", self.player_2.robot, shared))
+            # p1_proc.start()
+            # p2_proc.start()
+            # self.p1_proc.start()
+            # self.p2_proc.start()
+            self.shared["start"] = True
             #### TODO need to be changed
             logger.info(
                 f"Game started between {self.player_1.nickname} and {self.player_2.nickname}"
             )
             print("------game simluation starting----------")
-            while not shared["done"]:
+            while not self.shared["done"]:
                 if self.render:
                     self.env.render()
-                actions = shared["actions"]
+                actions = self.shared["actions"]
                 
                 if "agent_0" not in actions:
                     actions["agent_0"] = 0
@@ -172,13 +194,13 @@ class Game:
                 actions.clear()
                 obs, reward, terminated, truncated, info = self.env.step(step_actions)
                 
-                shared["observation"] = obs
-                shared["reward"] += reward
+                self.shared["observation"] = obs
+                self.shared["reward"] += reward
                 
                 p1_wins = obs["P1"]["wins"][0]
                 p2_wins = obs["P2"]["wins"][0]
                 if p1_wins == 1 or p2_wins == 1:
-                    shared["done"] = True
+                    self.shared["done"] = True
                     episode.player_1_won = p1_wins == 1
 
                     if episode.player_1_won:
@@ -191,8 +213,8 @@ class Game:
                     self.env.close()
                     break
                 time.sleep(0.001)
-            p1_proc.join()
-            p2_proc.join()
+            self.p1_proc.join()
+            self.p2_proc.join()
             return episode.player_1_won
         except Exception as e:
             import traceback

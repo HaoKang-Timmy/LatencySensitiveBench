@@ -205,18 +205,22 @@ class PlanAndActPlayer2(PlanAndAct):
                 )
                 break
             
-def agent_loop(agent_id: str, robot, shared):
+def agent_loop(agent_id: str, player, shared):
     connect_flag = False
     time_list = []
+    while not shared["start"]:
+
+        time.sleep(0.01)
+    player.robot.observe(shared["observation"], {}, 0.0)
     while not shared["done"]:
         actions = shared["actions"]
         if agent_id not in actions:
-            if not connect_flag and robot.serving_method == "remote":
-                robot.connect_socket()
+            if not connect_flag and player.robot.serving_method == "remote":
+                player.robot.connect_socket()
                 connect_flag = True
             start = time.time()
-            robot.plan()
-            actions[agent_id] = robot.act()
+            player.robot.plan()
+            actions[agent_id] = player.robot.act()
             end = time.time()
             time_list.append(end - start)
             
@@ -224,5 +228,5 @@ def agent_loop(agent_id: str, robot, shared):
         reward = shared.get("reward")
         action = shared["actions"].get(agent_id, 0)  # fallback to 0
         if obs is not None:
-            robot.observe(obs, {agent_id: action}, reward)
+            player.robot.observe(obs, {agent_id: action}, reward)
         time.sleep(0.001)
