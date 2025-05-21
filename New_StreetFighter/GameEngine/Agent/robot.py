@@ -53,6 +53,7 @@ class Robot(metaclass=abc.ABCMeta):
 
     super_bar_own: int
     player_nb: int  # player number
+    device: str = "cuda"  # device to use for the model
 
     def __init__(
         self,
@@ -262,32 +263,7 @@ class Robot(metaclass=abc.ABCMeta):
             
         return []
 
-    def call_llm_local(
-        self,
-        max_tokens: int = 100,
-        top_p: float = 1.0,
-    ):
-        move_list = "- " + "\n - ".join([move for move in META_INSTRUCTIONS])
-        prompt_template = [
-            {"role": "system", "content": BACKGROUND(self.character) + HINT_KEN()},
-            {
-                "role": "user",
-                "content": PROMPT_KEN(move_list, self.context_prompt())
-                + "\nYour Response:\n",
-            },
-        ]
-        prompt = self.tokenizer(
-            prompt_template,
-            return_tensors="pt",
-        )
-        # Generate the response
-        ####TODO output setting
-        response = self.local_model.generate(
-            **prompt,
-        )
-        generate_tokens = response.sequences[:, prompt["input_ids"].shape[-1]:]
-        text = self.tokenizer.decode(generate_tokens[0], skip_special_tokens=True)
-        return text
+    
     @abc.abstractmethod
     def call_llm(
         self,
@@ -479,3 +455,29 @@ To increase your score, move toward the opponent and attack the opponent. To pre
         # logger.debug(f"LLM call to {self.model}: {time.time() - start_time}s")
 
         return resp
+    def call_llm_local(
+        self,
+        max_tokens: int = 100,
+        top_p: float = 1.0,
+    ):
+        move_list = "- " + "\n - ".join([move for move in META_INSTRUCTIONS])
+        prompt_template = [
+            {"role": "system", "content": BACKGROUND(self.character) + HINT_KEN()},
+            {
+                "role": "user",
+                "content": PROMPT_KEN(move_list, self.context_prompt())
+                + "\nYour Response:\n",
+            },
+        ]
+        prompt = self.tokenizer(
+            prompt_template,
+            return_tensors="pt",
+        )
+        # Generate the response
+        ####TODO output setting
+        response = self.local_model.generate(
+            **prompt,
+        )
+        generate_tokens = response.sequences[:, prompt["input_ids"].shape[-1]:]
+        text = self.tokenizer.decode(generate_tokens[0], skip_special_tokens=True)
+        return text
