@@ -301,10 +301,18 @@ class TextRobot(Robot):
             self.local_model = AutoModelForCausalLM.from_pretrained(self.model, device_map=self.device)
         if self.serving_method == "vllm":
             import os
+            os.environ["CUDA_VISIBLE_DEVICES"] = str(self.device_id)
             from vllm import LLM, SamplingParams
             self.sampling_params = SamplingParams()
             self.tokenizer = AutoTokenizer.from_pretrained(self.model)
-            self.local_model = LLM(model=self.model, device=self.device)
+            self.local_model = LLM(model=self.model)
+        if self.serving_method == "sglang":
+            import os
+            os.environ["CUDA_VISIBLE_DEVICES"] = str(self.device_id)
+            from vllm import LLM, SamplingParams
+            import sglang as sgl
+            self.sampling_params = {"temperature": 0.0}
+            self.local_model = sgl.SGLang(model=self.model)
         
     def observe(self, observation: dict, actions: dict, reward: float):
         """
@@ -487,17 +495,18 @@ To increase your score, move toward the opponent and attack the opponent. To pre
                 prompt_template,
                 tokenize=False
             )
-        prompt_encoded = self.tokenizer(prompt, return_tensors="pt").to(self.device)
-        # Generate the response
-        response = self.local_model.generate(
-            **prompt_encoded,
-            max_new_tokens=max_tokens,
-            top_p=top_p,
-        )
-        # response 直接是Tensor，形状为(batch_size, seq_len)
-        prompt_length = prompt_encoded["input_ids"].shape[-1]
-        # 只取新生成的部分
-        generated_ids = response[0][prompt_length:]
-        text = self.tokenizer.decode(generated_ids, skip_special_tokens=True)
-        print("-----------response of model:", text)
+        if self.serving_method == "huggingface":
+            prompt_encoded = self.tokenizer(prompt, return_tensors="pt").to(self.device)
+            # Generate the response
+            response = self.local_model.generate(
+                **prompt_encoded,
+                max_new_tokens=max_tokens,
+                top_p=top_p,
+            )
+            # response 直接是Tensor，形状为(batch_size, seq_len)
+            prompt_length = prompt_encoded["input_ids"].shape[-1]
+            # 只取新生成的部分
+            generated_ids = response[0][prompt_length:]
+            text = self.tokenizer.decode(generated_ids, skip_special_tokens=True)
+            print("-----------response of model:", text)
         return text
