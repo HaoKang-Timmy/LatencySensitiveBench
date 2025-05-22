@@ -299,6 +299,12 @@ class TextRobot(Robot):
             from transformers import AutoTokenizer, AutoModelForCausalLM
             self.tokenizer = AutoTokenizer.from_pretrained(self.model)
             self.local_model = AutoModelForCausalLM.from_pretrained(self.model, device_map=self.device)
+        if self.serving_method == "vllm":
+            import os
+            from vllm import LLM, SamplingParams
+            self.sampling_params = SamplingParams()
+            self.tokenizer = AutoTokenizer.from_pretrained(self.model)
+            self.local_model = LLM(model=self.model, device=self.device)
         
     def observe(self, observation: dict, actions: dict, reward: float):
         """
@@ -470,10 +476,17 @@ To increase your score, move toward the opponent and attack the opponent. To pre
                 + "\nYour Response:\n",
             },
         ]
-        prompt = self.tokenizer.apply_chat_template(
-            prompt_template,
-            tokenize=False
-        )
+        if "Qwen3" in self.model:
+            prompt = self.tokenizer.apply_chat_template(
+                prompt_template,
+                tokenize=False,
+                enable_thinking=False,
+            )
+        else:
+            prompt = self.tokenizer.apply_chat_template(
+                prompt_template,
+                tokenize=False
+            )
         prompt_encoded = self.tokenizer(prompt, return_tensors="pt").to(self.device)
         # Generate the response
         response = self.local_model.generate(
