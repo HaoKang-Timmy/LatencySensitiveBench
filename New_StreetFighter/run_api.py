@@ -58,6 +58,18 @@ def main():
         default=38002,
         help="Port for the remote server"
     )
+    parser.add_argument(
+        "--device1",
+        type=str,
+        default="cuda:0",
+        help="Device to use"
+    )
+    parser.add_argument(
+        "--device2",
+        type=str,
+        default="cuda:1",
+        help="Device to use"
+    )
     
     args = parser.parse_args()
     logger.add(args.logdir, level="INFO", rotation="100 MB", encoding="utf-8")
@@ -69,6 +81,7 @@ def main():
             host= args.hostname1,
             port=args.hostname1,
             serving_method=args.serving_choice,
+            device=args.device1,
         ),
         player_2=Player2(
             nickname="Agent2",
@@ -76,6 +89,7 @@ def main():
             host= args.hostname1,
             port=args.hostname1,
             serving_method=args.serving_choice,
+            device=args.device2,
         ),
     )
     game.run()

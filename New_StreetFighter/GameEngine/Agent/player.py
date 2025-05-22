@@ -52,6 +52,7 @@ class Player1(Player):
         port: int = 38001,
         max_client: int = 1,
         serving_method: str = "remote",
+        device: str = "cuda",
     ):
         self.nickname = nickname
         self.model = model
@@ -78,6 +79,7 @@ class Player1(Player):
             player_nb=1,
             socket_config=socket_config,
             serving_method=serving_method,
+            device=device,
             )
         self.verify_provider_name()
         
@@ -94,7 +96,8 @@ class Player2(Player):
         port: int = 38001,
         max_client: int = 1,
         serving_method: str = "remote",
-    ):
+        device: str = "cuda",
+        ):
         self.nickname = nickname
         self.model = model
         self.robot_type = robot_type
@@ -120,6 +123,8 @@ class Player2(Player):
             player_nb=2,
             delay=self.delay,
             socket_config=socket_config,
+            serving_method=serving_method,
+            device=device,
         )
         self.verify_provider_name()
         
@@ -213,6 +218,12 @@ class PlanAndActPlayer2(PlanAndAct):
 def agent_loop(agent_id: str, player, shared):
     connect_flag = False
     time_list = []
+    if player.robot.serving_method is not "remote" or player.robot.serving_method is not "api":
+        player.robot.init_local_model()
+    if agent_id == "agent_0":
+        shared["model_prepare_0"] = True
+    else:
+        shared["model_prepare_1"] = True
     while not shared["start"]:
 
         time.sleep(0.01)

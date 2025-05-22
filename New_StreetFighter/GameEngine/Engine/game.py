@@ -70,6 +70,9 @@ class Game:
         self.shared["observation"] = self.observation
         self.shared["done"] = False
         self.shared["start"] = False
+        ### model prepare local
+        self.shared["model_prepare_0"] = False
+        self.shared["model_prepare_1"] = False
         
         self.actions = {
             "agent_0": 0,
@@ -166,16 +169,12 @@ class Game:
             # self.player_1.robot.observe(self.observation, {}, 0.0)
             # self.player_2.robot.observe(self.observation, {}, 0.0)
             episode = Episode(player_1=self.player_1, player_2=self.player_2)
-
-            #### TODO need to be changed
-            # p1_proc = Process(target=agent_loop, args=("agent_0", self.player_1.robot, shared))
-            # p2_proc = Process(target=agent_loop, args=("agent_1", self.player_2.robot, shared))
-            # p1_proc.start()
-            # p2_proc.start()
-            # self.p1_proc.start()
-            # self.p2_proc.start()
+            ### stuck until model is prepared
+            while not self.shared["model_prepare_0"] or not self.shared["model_prepare_1"]:
+                time.sleep(0.01)
+            
             self.shared["start"] = True
-            #### TODO need to be changed
+            
             logger.info(
                 f"Game started between {self.player_1.nickname} and {self.player_2.nickname}"
             )

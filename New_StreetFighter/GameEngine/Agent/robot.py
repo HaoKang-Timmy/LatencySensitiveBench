@@ -52,8 +52,7 @@ class Robot(metaclass=abc.ABCMeta):
     model: str  # model of the robot
 
     super_bar_own: int
-    player_nb: int  # player number
-    device: str = "cuda"  # device to use for the model
+    player_nb: int  # player number # device to use for the model
 
     def __init__(
         self,
@@ -72,6 +71,7 @@ class Robot(metaclass=abc.ABCMeta):
         tokenizer = None,
         serving_method = None,
         socket_config: SocketConfig = None,
+        device: str = "cuda",
     ):
         self.action_space = action_space
         self.character = character
@@ -97,6 +97,7 @@ class Robot(metaclass=abc.ABCMeta):
         self.tokenizer = tokenizer
         self.serving_method = serving_method
         self.socket_config = socket_config
+        self.device = device
     
     def act(self) -> int:
         """
@@ -297,7 +298,7 @@ class TextRobot(Robot):
         if self.serving_method == "huggingface":
             from transformers import AutoTokenizer, AutoModelForCausalLM
             self.tokenizer = AutoTokenizer.from_pretrained(self.model)
-            self.local_model = AutoModelForCausalLM.from_pretrained(self.model)
+            self.local_model = AutoModelForCausalLM.from_pretrained(self.model, device_map=self.device)
         
     def observe(self, observation: dict, actions: dict, reward: float):
         """
@@ -469,15 +470,21 @@ To increase your score, move toward the opponent and attack the opponent. To pre
                 + "\nYour Response:\n",
             },
         ]
-        prompt = self.tokenizer(
+        prompt = self.tokenizer.apply_chat_template(
             prompt_template,
-            return_tensors="pt",
+            tokenize=False
         )
+        prompt_encoded = self.tokenizer(prompt, return_tensors="pt").to(self.device)
         # Generate the response
-        ####TODO output setting
         response = self.local_model.generate(
-            **prompt,
+            **prompt_encoded,
+            max_new_tokens=max_tokens,
+            top_p=top_p,
         )
-        generate_tokens = response.sequences[:, prompt["input_ids"].shape[-1]:]
-        text = self.tokenizer.decode(generate_tokens[0], skip_special_tokens=True)
+        # response 直接是Tensor，形状为(batch_size, seq_len)
+        prompt_length = prompt_encoded["input_ids"].shape[-1]
+        # 只取新生成的部分
+        generated_ids = response[0][prompt_length:]
+        text = self.tokenizer.decode(generated_ids, skip_special_tokens=True)
+        print("-----------response of model:", text)
         return text
