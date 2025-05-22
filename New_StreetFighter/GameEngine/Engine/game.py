@@ -8,6 +8,7 @@ from loguru import logger
 
 from GameEngine.Agent import KEN_GREEN, KEN_RED, TextRobot, SocketConfig, Player1, Player2, PlanAndActPlayer1, PlanAndActPlayer2,Episode
 from GameEngine.Agent.config import MODELS
+from GameEngine.Agent.player import agent_loop
 from diambra.arena import (
     EnvironmentSettingsMultiAgent,
     RecordingSettings,
@@ -17,6 +18,7 @@ from diambra.arena import (
 from rich import print
 
 from GameEngine.Agent.robot import Robot
+from multiprocessing import Process, Manager
 import time
 
 class Game:
@@ -60,6 +62,28 @@ class Game:
 
         self.player_1 = player_1
         self.player_2 = player_2
+        
+        self.manager = Manager()
+        self.shared = self.manager.dict()
+        self.shared["actions"] = self.manager.dict()
+        self.shared["reward"] = 0.0
+        self.shared["observation"] = self.observation
+        self.shared["done"] = False
+        self.shared["start"] = False
+        ### model prepare local
+        self.shared["model_prepare_0"] = False
+        self.shared["model_prepare_1"] = False
+        
+        self.actions = {
+            "agent_0": 0,
+            "agent_1": 0,
+        }
+        self.reward = 0.0
+        
+        self.p1_proc = Process(target=agent_loop, args=("agent_0", self.player_1, self.shared))
+        self.p2_proc = Process(target=agent_loop, args=("agent_1", self.player_2, self.shared))
+        self.p1_proc.start()
+        self.p2_proc.start()
         
     def _init_settings(self) -> EnvironmentSettingsMultiAgent:
         """
@@ -129,75 +153,78 @@ class Game:
         
     def run(self):
         try:
-            self.actions = {
-                "agent_0": 0,
-                "agent_1": 0,
-            }
-            self.reward = 0.0
+            # manager = Manager()
+            # shared = manager.dict()
+            # shared["actions"] = manager.dict()
+            # shared["reward"] = 0.0
+            # shared["observation"] = self.observation
+            # shared["done"] = False
             
-            self.player_1.robot.observe(self.observation, {}, 0.0)
-            self.player_2.robot.observe(self.observation, {}, 0.0)
+            # self.actions = {
+            #     "agent_0": 0,
+            #     "agent_1": 0,
+            # }
+            # self.reward = 0.0
+            self.shared["observation"] = self.observation
+            # self.player_1.robot.observe(self.observation, {}, 0.0)
+            # self.player_2.robot.observe(self.observation, {}, 0.0)
             episode = Episode(player_1=self.player_1, player_2=self.player_2)
-            player1_thread = PlanAndActPlayer1(game=self, episode=episode, serving_type=self.player_1.robot.serving_method)
+            ### stuck until model is prepared
+            while not self.shared["model_prepare_0"] or not self.shared["model_prepare_1"]:
+                time.sleep(0.01)
             
-            player2_thread = PlanAndActPlayer2(game=self, episode=episode, serving_type=self.player_2.robot.serving_method)
-            player1_thread.start()
-            player2_thread.start()
+            self.shared["start"] = True
+            
             logger.info(
                 f"Game started between {self.player_1.nickname} and {self.player_2.nickname}"
             )
             print("------game simluation starting----------")
-            while True:
+            while not self.shared["done"]:
                 if self.render:
                     self.env.render()
-                    
-                actions = self.actions
-                time.sleep(0.001)
+                actions = self.shared["actions"]
                 
                 if "agent_0" not in actions:
                     actions["agent_0"] = 0
                 if "agent_1" not in actions:
                     actions["agent_1"] = 0
                     
-                observation, reward, terminated, truncated, info = self.env.step(
-                    actions
-                )
+                step_actions = dict(actions)
+                actions.clear()
+                obs, reward, terminated, truncated, info = self.env.step(step_actions)
                 
-                if "agent_0" in self.actions:
-                    del actions["agent_0"]
-                if "agent_1" in self.actions:
-                    del actions["agent_1"]
-                    
-                self.observation = observation
-                self.reward += reward
+                self.shared["observation"] = obs
+                self.shared["reward"] += reward
                 
-                p1_wins = observation["P1"]["wins"][0]
-                p2_wins = observation["P2"]["wins"][0]
-                
+                p1_wins = obs["P1"]["wins"][0]
+                p2_wins = obs["P2"]["wins"][0]
                 if p1_wins == 1 or p2_wins == 1:
-                    player1_thread.running = False
-                    player2_thread.running = False
-                    
+                    self.shared["done"] = True
                     episode.player_1_won = p1_wins == 1
-                    
+
                     if episode.player_1_won:
-                        print(
-                            f"[red] Player1 {self.player_1.robot.model} '{self.player_1.nickname}' won!"
-                        )
+                        print(f"[red] Player1 {self.player_1.robot.model} '{self.player_1.nickname}' won!")
                         logger.info(f"[red]Player1 {self.player_1.robot.model} '{self.player_1.nickname}' won!")
                     else:
-                        print(
-                            f"[green] Player2 {self.player_2.robot.model} {self.player_2.nickname} won!"
-                        )
+                        print(f"[green] Player2 {self.player_2.robot.model} {self.player_2.nickname} won!")
                         logger.info(f"[green] Player2 {self.player_2.robot.model} {self.player_2.nickname} won!")
-                        
-                    # episode.save()
+
                     self.env.close()
-                    
-                    player1_time_list = player1_thread.join()
-                    player2_time_list = player2_thread.join()
-                    
-                    return episode.player_1_won
+                    break
+                time.sleep(0.001)
+            self.p1_proc.join()
+            self.p2_proc.join()
+            return episode.player_1_won
+        except Exception as e:
+            import traceback
+            print(f"Exception: {e}")
+            traceback.print_exception(type(e), e, e.__traceback__, limit=10)
+            try:
+                self.env.close()
+            except:
+                pass
+            return 0
+          
                 
         except Exception as e:
             # self.env.close()

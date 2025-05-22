@@ -13,11 +13,15 @@ from .share_episode import Episode
 import time
 
 
+
 class Player:
     nickname: str
     model: str
     robot: Optional[Robot] = None
+    serving_method: str
     temperature: float = 0.7
+    device: str = "cuda"
+
 
     def verify_provider_name(self):
         if self.model.startswith("openai"):
@@ -48,6 +52,7 @@ class Player1(Player):
         port: int = 38001,
         max_client: int = 1,
         serving_method: str = "remote",
+        device: str = "cuda",
     ):
         self.nickname = nickname
         self.model = model
@@ -73,6 +78,8 @@ class Player1(Player):
             model=self.model,
             player_nb=1,
             socket_config=socket_config,
+            serving_method=serving_method,
+            device=device,
             )
         self.verify_provider_name()
         
@@ -89,7 +96,8 @@ class Player2(Player):
         port: int = 38001,
         max_client: int = 1,
         serving_method: str = "remote",
-    ):
+        device: str = "cuda",
+        ):
         self.nickname = nickname
         self.model = model
         self.robot_type = robot_type
@@ -115,6 +123,8 @@ class Player2(Player):
             player_nb=2,
             delay=self.delay,
             socket_config=socket_config,
+            serving_method=serving_method,
+            device=device,
         )
         self.verify_provider_name()
         
@@ -204,3 +214,35 @@ class PlanAndActPlayer2(PlanAndAct):
                     f"Player 2 average time: {sum(player_2) / len(player_2)}"
                 )
                 break
+            
+def agent_loop(agent_id: str, player, shared):
+    connect_flag = False
+    time_list = []
+    if player.robot.serving_method is not "remote" or player.robot.serving_method is not "api":
+        player.robot.init_local_model()
+    if agent_id == "agent_0":
+        shared["model_prepare_0"] = True
+    else:
+        shared["model_prepare_1"] = True
+    while not shared["start"]:
+
+        time.sleep(0.01)
+    player.robot.observe(shared["observation"], {}, 0.0)
+    while not shared["done"]:
+        actions = shared["actions"]
+        if agent_id not in actions:
+            if not connect_flag and player.robot.serving_method == "remote":
+                player.robot.connect_socket()
+                connect_flag = True
+            start = time.time()
+            player.robot.plan()
+            actions[agent_id] = player.robot.act()
+            end = time.time()
+            time_list.append(end - start)
+            
+        obs = shared.get("observation")
+        reward = shared.get("reward")
+        action = shared["actions"].get(agent_id, 0)  # fallback to 0
+        if obs is not None:
+            player.robot.observe(obs, {agent_id: action}, reward)
+        time.sleep(0.001)
