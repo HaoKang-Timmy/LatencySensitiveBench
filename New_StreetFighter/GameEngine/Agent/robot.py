@@ -33,6 +33,19 @@ import abc
 from llama_index.core.base.llms.types import CompletionResponse
 from llama_index.core.llms import ChatMessage, ChatResponse
 
+def get_device_id(device):
+
+    if isinstance(device, int):
+        return str(device)
+    match = re.search(r":(\d+)", str(device))
+    if match:
+        return match.group(1)
+    match2 = re.search(r"(\d+)", str(device))
+    if match2:
+        return match2.group(1)
+    return "0"  
+
+
 class Robot(metaclass=abc.ABCMeta):
     observations: List[Optional[Dict[str, Any]]]  # memory
     next_steps: List[int]  # action plan
@@ -234,7 +247,7 @@ class Robot(metaclass=abc.ABCMeta):
 
                 logger.debug(f"Next moves: {valid_moves}")
                 return valid_moves
-        elif self.serving_method == "huggingface":
+        elif self.serving_method == "huggingface" or self.serving_method == "vllm":
             result = self.call_llm_local()
             matches = re.findall(r"- ([\w ]+)", result)
             moves = ["".join(match) for match in matches]
@@ -295,16 +308,26 @@ class Robot(metaclass=abc.ABCMeta):
     
 class TextRobot(Robot):
     def init_local_model(self):
+        from transformers import AutoTokenizer, AutoModelForCausalLM
         if self.serving_method == "huggingface":
-            from transformers import AutoTokenizer, AutoModelForCausalLM
+            
             self.tokenizer = AutoTokenizer.from_pretrained(self.model)
             self.local_model = AutoModelForCausalLM.from_pretrained(self.model, device_map=self.device)
         if self.serving_method == "vllm":
             import os
+            os.environ["CUDA_VISIBLE_DEVICES"] = get_device_id(self.device)
+
             from vllm import LLM, SamplingParams
             self.sampling_params = SamplingParams()
             self.tokenizer = AutoTokenizer.from_pretrained(self.model)
-            self.local_model = LLM(model=self.model, device=self.device)
+            self.local_model = LLM(model=self.model)
+        if self.serving_method == "sglang":
+            import os
+            os.environ["CUDA_VISIBLE_DEVICES"] = get_device_id(self.device)
+            from vllm import LLM, SamplingParams
+            import sglang as sgl
+            self.sampling_params = {"temperature": 0.0}
+            self.local_model = sgl.SGLang(model=self.model)
         
     def observe(self, observation: dict, actions: dict, reward: float):
         """
@@ -467,6 +490,7 @@ To increase your score, move toward the opponent and attack the opponent. To pre
         max_tokens: int = 100,
         top_p: float = 1.0,
     ):
+        print(f"call local llm")
         move_list = "- " + "\n - ".join([move for move in META_INSTRUCTIONS])
         prompt_template = [
             {"role": "system", "content": BACKGROUND(self.character) + HINT_KEN()},
@@ -487,17 +511,36 @@ To increase your score, move toward the opponent and attack the opponent. To pre
                 prompt_template,
                 tokenize=False
             )
-        prompt_encoded = self.tokenizer(prompt, return_tensors="pt").to(self.device)
-        # Generate the response
-        response = self.local_model.generate(
-            **prompt_encoded,
-            max_new_tokens=max_tokens,
-            top_p=top_p,
-        )
-        # response 直接是Tensor，形状为(batch_size, seq_len)
-        prompt_length = prompt_encoded["input_ids"].shape[-1]
-        # 只取新生成的部分
-        generated_ids = response[0][prompt_length:]
-        text = self.tokenizer.decode(generated_ids, skip_special_tokens=True)
+        if self.serving_method == "huggingface":
+            prompt_encoded = self.tokenizer(prompt, return_tensors="pt").to(self.device)
+            # Generate the response
+            response = self.local_model.generate(
+                **prompt_encoded,
+                max_new_tokens=max_tokens,
+                top_p=top_p,
+            )
+            # response 直接是Tensor，形状为(batch_size, seq_len)
+            prompt_length = prompt_encoded["input_ids"].shape[-1]
+            # 只取新生成的部分
+            generated_ids = response[0][prompt_length:]
+            text = self.tokenizer.decode(generated_ids, skip_special_tokens=True)
+        elif self.serving_method == "vllm":
+            # vllm 只支持字符串prompt
+            outputs = self.local_model.generate(
+                prompt,
+                sampling_params=self.sampling_params
+            )
+            # vllm的outputs是一个列表，每个元素有 .outputs[0].text
+            # 只取生成内容（不含prompt）
+            print("outputs of vllm:", outputs)
+            text = outputs[0].outputs[0].text
+        elif self.serving_method == "sglang":
+            # sglang 只支持字符串prompt
+            outputs = self.local_model.generate(
+                prompt,
+                **self.sampling_params
+            )
+            # sglang的outputs通常是字符串
+            text = outputs['text']
         print("-----------response of model:", text)
         return text

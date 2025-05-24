@@ -153,21 +153,9 @@ class Game:
         
     def run(self):
         try:
-            # manager = Manager()
-            # shared = manager.dict()
-            # shared["actions"] = manager.dict()
-            # shared["reward"] = 0.0
-            # shared["observation"] = self.observation
-            # shared["done"] = False
-            
-            # self.actions = {
-            #     "agent_0": 0,
-            #     "agent_1": 0,
-            # }
-            # self.reward = 0.0
+
             self.shared["observation"] = self.observation
-            # self.player_1.robot.observe(self.observation, {}, 0.0)
-            # self.player_2.robot.observe(self.observation, {}, 0.0)
+
             episode = Episode(player_1=self.player_1, player_2=self.player_2)
             ### stuck until model is prepared
             while not self.shared["model_prepare_0"] or not self.shared["model_prepare_1"]:
