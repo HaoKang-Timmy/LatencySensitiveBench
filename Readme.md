@@ -29,6 +29,7 @@ https://github.com/user-attachments/assets/c69571df-f109-4e92-9e60-60a9cd7933f2
 
 ### HFTBench
 <p align="left"><img width="100%" src="./Figs/HFTData.png"></p><br/>
+
 ## Contents
 - [Installation](#installation)
 - [QuickStart](#quick-start)
