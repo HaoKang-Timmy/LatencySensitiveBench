@@ -253,7 +253,7 @@ class Robot(metaclass=abc.ABCMeta):
 
                 logger.debug(f"Next moves: {valid_moves}")
                 return valid_moves
-        elif self.serving_method == "huggingface" or self.serving_method == "vllm":
+        elif self.serving_method == "huggingface" or self.serving_method == "vllm" or self.serving_method == "sglang":
             result = self.call_llm_local()
             matches = re.findall(r"- ([\w ]+)", result)
             moves = ["".join(match) for match in matches]
@@ -545,6 +545,7 @@ To increase your score, move toward the opponent and attack the opponent. To pre
             #     prompt,
             #     sampling_params=self.sampling_params
             # )
+            # print("client ask")
             if "Qwen3" in self.model:
                 extra_body = {
                     "max_tokens": max_tokens,
@@ -561,17 +562,6 @@ To increase your score, move toward the opponent and attack the opponent. To pre
                 extra_body=extra_body
             )
             text = completion.choices[0].message.content
-            # vllm的outputs是一个列表，每个元素有 .outputs[0].text
-            # 只取生成内容（不含prompt）
-            # print("outputs of vllm:", outputs)
-            # print("text of vllm:", text)
-        # elif self.serving_method == "sglang":
-        #     # sglang 只支持字符串prompt
-        #     outputs = self.local_model.generate(
-        #         prompt,
-        #         **self.sampling_params
-        #     )
-        #     # sglang的outputs通常是字符串
-        #     text = outputs['text']
-        # # print("-----------response of model:", text)
+
+        # print("-----------response of model:", text)
         return text

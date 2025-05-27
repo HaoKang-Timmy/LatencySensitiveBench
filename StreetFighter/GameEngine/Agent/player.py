@@ -237,7 +237,7 @@ def agent_loop(agent_id: str, player, shared):
         time.sleep(0.01)
     player.robot.observe(shared["observation"], {}, 0.0)
     while not shared["done"]:
-
+        # print("start action")
         actions = shared["actions"]
         if agent_id not in actions:
             if not connect_flag and player.robot.serving_method == "remote":
