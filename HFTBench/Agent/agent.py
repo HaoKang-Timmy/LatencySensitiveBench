@@ -17,12 +17,12 @@ class AgentConfig:
     top_p: float
     top_k: int
     do_sample: bool
-    use_vllm: bool
     device: str
     profit_threshold: float
     cash: int
     port: int
     hostname: str
+    serve_type: str
 
 
 class TradingAgent:
@@ -185,7 +185,7 @@ class TradingAgent:
         # )
         # return response[0].outputs[0].text
 
-        if "Qwen3" in self.model:
+        if "Qwen3" in self.config.model_name:
             extra_body = {
                 "max_tokens": self.config.max_new_tokens,
                 "chat_template_kwargs": {"enable_thinking": False},
@@ -195,7 +195,7 @@ class TradingAgent:
                 "max_tokens": self.config.max_new_tokens,
             }
         completion = self.client.chat.completions.create(
-                model=self.model,
+                model=self.config.model_name,
                 messages=prompt_text,
                 stream=False,
                 extra_body=extra_body

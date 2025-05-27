@@ -16,7 +16,7 @@ def get_simulation_config():
     parser.add_argument("--top_k", type=int, default=50)
     parser.add_argument("--do_sample", action="store_true")
     parser.add_argument("--serve_type", type=str, default="huggingface", choices=["huggingface", "vllm", "sglang"])
-    parser.add_argument("--profit_threshold", type=float, default=0.1)
+    parser.add_argument("--profit_threshold", type=float, default=0.03)
     parser.add_argument("--stock_names", type=str, nargs="+", default=["AMZN", "NVDA"])
     parser.add_argument("--date_str", type=str, default="2024-08-05")
     parser.add_argument("--json_dir", type=str, default="./data/")

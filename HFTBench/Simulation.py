@@ -42,8 +42,6 @@ if __name__ == "__main__":
     # agents = [TradingAgent(config=cfg, stock_list=stock_names) for cfg in agent_configs]
     agents = []
     for i, cfg in enumerate(agent_configs):
-        if cfg.use_vllm:
-            os.environ["CUDA_VISIBLE_DEVICES"] = cfg.device.split(":")[-1]
         agents.append(TradingAgent(config=cfg, stock_list=stock_names))
     for agent in agents:
         agent.env = env
