@@ -1,7 +1,7 @@
 # LSB: Latency Sensitive Benchmarks for LLM Agents.
 **[Paper (Win Fast or Lose Slow)](https://arxiv.org/abs/2505.19481) | [Website(Competitve Agents)](https://haokang-timmy.github.io/CompetitiveAgents/)**
 
-<div style="width: 80%; margin: auto; display: flex; justify-content: center; align-items: center; gap: 2%;">
+<div style="width: 65%; margin: auto; display: flex; justify-content: center; align-items: center; gap: 2%;">
   <img src="./Figs/CompetitiveAgents.png" style="max-height: 200px; height: auto; width: auto;">
   <img src="./Figs/TimeSensitiveTask.png" style="max-height: 200px; height: auto; width: auto;">
 </div>
