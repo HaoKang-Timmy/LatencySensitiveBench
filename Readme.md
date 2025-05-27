@@ -116,3 +116,8 @@ If you find Win Fast or Lose slow useful or relevant to your research, please ki
 [Diambra Arena](https://github.com/diambra/arena)
 
 [Polygon Platform](https://polygon.technology/)
+
+## TODOs
+1. Self define agent
+2. Per-tick data trading with multiple agents
+3. FPX support with sglang and vllm engine
