@@ -21,9 +21,14 @@ Latency Sensitive Benchmarks (LSB) are specifically designed to evaluate LLM Age
 
 Experience how LSB can help you benchmark and improve your LLM agents in truly challenging, real-time environments!
 ## Visualization
-Competitive Games: Faster one wins!!!!
+### StreetFighter
 
 https://github.com/user-attachments/assets/c69571df-f109-4e92-9e60-60a9cd7933f2
+
+
+
+### HFTBench
+<p align="left"><img width="100%" src="./Figs/HFTData.png"></p><br/>
 ## Contents
 - [Installation](#installation)
 - [QuickStart](#quick-start)
