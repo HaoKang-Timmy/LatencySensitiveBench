@@ -97,3 +97,22 @@ Here we provide results on two RTX5090. More results on H100 are comming soon.
 ## Self-define Agent
 
 Comming soon.
+
+## Reference
+If you find Win Fast or Lose slow useful or relevant to your research, please kindly cite our paper:
+```
+@misc{kang2025winfastloseslow,
+      title={Win Fast or Lose Slow: Balancing Speed and Accuracy in Latency-Sensitive Decisions of LLMs}, 
+      author={Hao Kang and Qingru Zhang and Han Cai and Weiyuan Xu and Tushar Krishna and Yilun Du and Tsachy Weissman},
+      year={2025},
+      eprint={2505.19481},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2505.19481}, 
+}
+```
+## Related projects
+
+[Diambra Arena](https://github.com/diambra/arena)
+
+[Polygon Platform](https://polygon.technology/)
