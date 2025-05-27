@@ -177,7 +177,7 @@ class Robot(metaclass=abc.ABCMeta):
         start = time.time()
         next_steps_from_llm = self.get_moves_from_llm()
         end = time.time()
-        logger.debug(f"Time to get moves from LLM: {end - start}s")
+        logger.info(f"Time to get moves from LLM: {end - start}s")
         next_buttons_to_press = [
             button
             for combo in next_steps_from_llm
