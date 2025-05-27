@@ -53,6 +53,7 @@ class Player1(Player):
         max_client: int = 1,
         serving_method: str = "remote",
         device: str = "cuda",
+        api_key: str = "123321",
     ):
         self.nickname = nickname
         self.model = model
@@ -80,6 +81,9 @@ class Player1(Player):
             socket_config=socket_config,
             serving_method=serving_method,
             device=device,
+            host = host,
+            port = port,
+            api_key = api_key,
             )
         self.verify_provider_name()
         
@@ -97,6 +101,7 @@ class Player2(Player):
         max_client: int = 1,
         serving_method: str = "remote",
         device: str = "cuda",
+        api_key: str = "123321",
         ):
         self.nickname = nickname
         self.model = model
@@ -125,6 +130,9 @@ class Player2(Player):
             socket_config=socket_config,
             serving_method=serving_method,
             device=device,
+            host = host,
+            port = port,
+            api_key = api_key,
         )
         self.verify_provider_name()
         
@@ -219,7 +227,8 @@ def agent_loop(agent_id: str, player, shared):
     connect_flag = False
     time_list = []
     if player.robot.serving_method is not "remote" or player.robot.serving_method is not "api":
-        player.robot.init_local_model()
+        # player.robot.init_local_model()
+        player.robot.init_client()
     if agent_id == "agent_0":
         shared["model_prepare_0"] = True
     else:

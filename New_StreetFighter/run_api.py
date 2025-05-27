@@ -37,25 +37,25 @@ def main():
     parser.add_argument(
         "--hostname1",
         type=str,
-        default="localhost",
+        default="http://localhost",
         help="Hostname for the remote server"
     )
     parser.add_argument(
         "--hostname2",
         type=str,
-        default="localhost",
+        default="http://localhost",
         help="Hostname for the remote server"
     )
     parser.add_argument(
         "--port1",
         type=int,
-        default=38001,
+        default=8001,
         help="Port for the remote server"
     )
     parser.add_argument(
         "--port2",
         type=int,
-        default=38002,
+        default=8002,
         help="Port for the remote server"
     )
     parser.add_argument(
@@ -79,15 +79,15 @@ def main():
             nickname="Agent1",
             model=args.agent1,
             host= args.hostname1,
-            port=args.hostname1,
+            port=args.port1,
             serving_method=args.serving_choice,
             device=args.device1,
         ),
         player_2=Player2(
             nickname="Agent2",
             model=args.agent1,
-            host= args.hostname1,
-            port=args.hostname1,
+            host= args.hostname2,
+            port=args.port2,
             serving_method=args.serving_choice,
             device=args.device2,
         ),
