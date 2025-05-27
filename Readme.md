@@ -62,10 +62,12 @@ pip install loguru llama_index dotenv gymnasium rich openai
 ### StreetFighter
 change $GAME_PATH to the root path of where you put the zip file.
 ```
-python3 diambra -r $GAME_PATH --serving-choice huggingface --agent1 Qwen/Qwen3-4B --agent2 Qwen/Qwen3-8B --logdir "test.log" --device1 cuda:0 --device2 cuda:1
+cd ./StreetFighter
+python3 diambra -r $GAME_PATH -l python3 run_api.py --serving-choice huggingface --agent1 Qwen/Qwen3-4B --agent2 Qwen/Qwen3-8B --logdir "test.log" --device1 cuda:0 --device2 cuda:1
 ```
 ### HFTBench
 ```
+cd ./HFTBench
 python3 Simulation.py --agent_count 1 --device_list cuda:0 
 ```
 ## Evaluation
