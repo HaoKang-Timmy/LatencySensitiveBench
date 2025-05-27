@@ -87,7 +87,7 @@ class Robot(metaclass=abc.ABCMeta):
         device: str = "cuda",
         host: str = "http://localhost",
         port: int = 8001,
-        api_key: str = "123321",
+        api_key: str = "None",
     ):
         self.action_space = action_space
         self.character = character
@@ -336,7 +336,7 @@ class TextRobot(Robot):
             self.local_model = sgl.SGLang(model=self.model)
     def init_client(self):
         from openai import OpenAI
-        if self.serving_method == "vllm":
+        if self.serving_method == "vllm" or self.serving_method == "sglang":
             print("url:", f"{self.host}:{self.port}/v1")
             self.client = OpenAI(
                 base_url = f"{self.host}:{self.port}/v1",
@@ -539,7 +539,7 @@ To increase your score, move toward the opponent and attack the opponent. To pre
             # 只取新生成的部分
             generated_ids = response[0][prompt_length:]
             text = self.tokenizer.decode(generated_ids, skip_special_tokens=True)
-        elif self.serving_method == "vllm":
+        elif self.serving_method == "vllm" or self.serving_method == "sglang":
             # vllm 只支持字符串prompt
             # outputs = self.local_model.generate(
             #     prompt,
@@ -564,14 +564,14 @@ To increase your score, move toward the opponent and attack the opponent. To pre
             # vllm的outputs是一个列表，每个元素有 .outputs[0].text
             # 只取生成内容（不含prompt）
             # print("outputs of vllm:", outputs)
-            print("text of vllm:", text)
-        elif self.serving_method == "sglang":
-            # sglang 只支持字符串prompt
-            outputs = self.local_model.generate(
-                prompt,
-                **self.sampling_params
-            )
-            # sglang的outputs通常是字符串
-            text = outputs['text']
-        # print("-----------response of model:", text)
+            # print("text of vllm:", text)
+        # elif self.serving_method == "sglang":
+        #     # sglang 只支持字符串prompt
+        #     outputs = self.local_model.generate(
+        #         prompt,
+        #         **self.sampling_params
+        #     )
+        #     # sglang的outputs通常是字符串
+        #     text = outputs['text']
+        # # print("-----------response of model:", text)
         return text

@@ -53,7 +53,7 @@ class Player1(Player):
         max_client: int = 1,
         serving_method: str = "remote",
         device: str = "cuda",
-        api_key: str = "123321",
+        api_key: str = "None",
     ):
         self.nickname = nickname
         self.model = model
@@ -101,7 +101,7 @@ class Player2(Player):
         max_client: int = 1,
         serving_method: str = "remote",
         device: str = "cuda",
-        api_key: str = "123321",
+        api_key: str = "None",
         ):
         self.nickname = nickname
         self.model = model
