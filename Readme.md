@@ -70,9 +70,30 @@ python3 Simulation.py --agent_count 1 --device_list cuda:0
 ```
 ## Evaluation
 Here we provide results on two RTX5090. More results on H100 are comming soon.
-### StreetFighter
+
+### HFTBench
+
+| Model Parameter Size | Bitwidth Avg | Latency (ms) ↓ | Daily Yield (%) ↑ |
+|----------------------|--------------|----------------|--------------------|
+| 14B (ours)           | 7.2          | 713            | **26.52**          |
+| 14B                 | 8            | 801            | 23.14              |
+| 14B                 | 16           | 1302           | 17.20              |
+| 7B                  | 16           | 619            | -3.28              |
+| 7B (ours)           | 7.6          | 386            | -7.25              |
+| 7B                  | 8            | 394            | -12.94             |
+
+### Street Fighter
+
+| Model Parameter Size | Bitwidth Avg | Latency (ms) ↓ | ELO Score ↑ |
+|----------------------|--------------|----------------|-------------|
+| 3B (ours)            | 6.8          | 195            | **5.99**    |
+| 7B (ours)            | 7.2          | 354            | 2.33        |
+| 3B                   | 8            | 222            | 2.19        |
+| 3B                   | 16           | 349            | 0.25        |
+| 7B                   | 8            | 394            | -0.44       |
+| 1.5B                 | 8            | 142            | -1.25       |
+
 
 ## Self-define Agent
 
-
-sudo yum install libsndfile1
+Comming soon.
