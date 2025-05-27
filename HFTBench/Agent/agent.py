@@ -242,8 +242,8 @@ class TradingAgent:
         # return {s: 0 for s in self.stock_list}  # placeholder
         return decisions, end - start
 
-    def apply_trade(self, decisions: dict, env, dt: datetime):
-        price_view = env.get_current_price(dt, rank=env.trade_count[dt], total_agents=len(env.trade_in_second[dt]))
+    def apply_trade(self, decisions: dict, env, dt: datetime, delay):
+        price_view = env.get_current_price(dt, delay)
         env.trade_count[dt] += 1
         for stock, delta in decisions.items():
             p = price_view.get(stock, {})

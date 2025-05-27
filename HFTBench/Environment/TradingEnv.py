@@ -23,7 +23,8 @@ class TradeMarket:
         self.current_date = None
         self.time_cursor = None
         self.trade_time_delay = []
-        self.daily_avg_prices = {}  # 存储每个股票每天的平均价格
+        self.daily_avg_prices = {}  # store the daily average price of each stock
+        self.decay_window = 2 # 2 second for linear decay
 
         stock_times = []
 
@@ -69,17 +70,27 @@ class TradeMarket:
         else:
             raise ValueError("No overlapping timestamps across stocks.")
 
-    # def _apply_linear_decay(self, high, low, total_agents):
-    #     avg = (high + low) / 2
-    #     if total_agents <= 1:
-    #         alpha = 0.0
-    #     else:
-    #         alpha = min(rank / (total_agents - 1), 1.0)
-    #     new_high = high - alpha * (high - avg)
-    #     new_low = low + alpha * (avg - low)
-    #     return new_high, new_low
+    def _apply_linear_decay(self, high, low, delay, stock_name):
+        avg = self.daily_avg_prices[stock_name]
+        
+        # 如果延迟大于等于decay_window(2秒)，价格完全收敛到平均价格
+        if delay >= self.decay_window:
+            return avg, avg
+        
+        # 如果延迟为0，返回原始价格
+        if delay <= 0:
+            return high, low
+        
+        # 线性插值：delay在0到decay_window之间时的线性变化
+        # alpha = 0 时保持原价格，alpha = 1 时完全变为平均价格
+        alpha = delay / self.decay_window
+        
+        new_high = high * (1 - alpha) + avg * alpha
+        new_low = low * (1 - alpha) + avg * alpha
+        
+        return new_high, new_low
 
-    def get_current_price(self, dt: datetime):
+    def get_current_price(self, dt: datetime, delay = 0):
         date_str = dt.strftime("%Y-%m-%d")
         sec_str = dt.strftime("%H:%M:%S")
         price_dict = {}
@@ -89,11 +100,14 @@ class TradeMarket:
                 continue
             entry = data[date_str][sec_str]
             high, low = entry["high"], entry["low"]
-            # if total_agents >= 1:
-            #     adj_high, adj_low = self._apply_linear_decay(high, low, total_agents, stock_name = stock)
-            #     price_dict[stock] = {"buy": adj_low, "sell": adj_high}
-            # else:
-            price_dict[stock] = {"buy": low, "sell": high}
+            
+            # 应用线性衰减
+            if delay > 0:
+                adj_high, adj_low = self._apply_linear_decay(high, low, delay, stock_name = stock)
+                price_dict[stock] = {"buy": adj_low, "sell": adj_high}
+            else:
+                price_dict[stock] = {"buy": low, "sell": high}
+            
         return price_dict
 
     def get_next_time(self):
@@ -135,7 +149,7 @@ class TradeMarket:
             self.real_time = datetime.now()
             ####TODO currently only one agent is allowed to trade at a time
             decisions, delay = agents[0].decide_trades(prices_snapshot)
-            agents[0].apply_trade(decisions, self, dt)
+            agents[0].apply_trade(decisions, self, dt, delay)
             # with Manager() as manager:
             #     shared_dict = manager.dict()
             #     timing_dict = manager.dict()
