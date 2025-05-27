@@ -1,6 +1,16 @@
 # LSB: Latency Sensitive Benchmarks for LLM Agents.
 **[Paper (Win Fast or Lose Slow)](https://arxiv.org/abs/2505.19481) | [Website(Competitve Agents)](https://haokang-timmy.github.io/CompetitiveAgents/)**
-<p align="center"><img width="40%" src="./Figs/CompetitiveAgents.png"></p><br/>
+<!-- <p align="left"><img width="40%" src="./Figs/CompetitiveAgents.png"></p><br/>
+<p align="right"><img width="40%" src="./Figs/TimeSensitiveTask.png"></p><br/>
+<div style="display: flex; justify-content: center; align-items: center; gap: 2%;">
+  <img src="./Figs/CompetitiveAgents.png" style="max-height: 200px; height: auto; width: auto;">
+  <img src="./Figs/TimeSensitiveTask.png" style="max-height: 200px; height: auto; width: auto;">
+</div> -->
+<div style="width: 80%; margin: auto; display: flex; justify-content: center; align-items: center; gap: 2%;">
+  <img src="./Figs/CompetitiveAgents.png" style="max-height: 200px; height: auto; width: auto;">
+  <img src="./Figs/TimeSensitiveTask.png" style="max-height: 200px; height: auto; width: auto;">
+</div>
+
 Latency Sensitive Benchmarks (LSB) are specifically designed to evaluate LLM Agents in realistic, latency-sensitive scenarios such as competitive games and high-frequency trading. In these tasks, **both latency and accuracy** jointly determine the final reward (e.g., game win rate or trading yield). Unlike previous benchmarks, LSB introduces two novel tasks that not only assess the intelligence of LLM agents, but also rigorously evaluate the efficiency of the underlying serving systems and algorithms. By integrating latency, accuracy, and real-world reward into a unified framework, LSB pioneers a new direction for benchmarking—encouraging the development of efficient, adaptive, and latency-aware LLM systems and algorithms. We hope our benchmarks and findings inspire the community to move beyond accuracy-centric evaluation and to build LLM solutions that truly excel in real-world, time-critical applications. We invite you to try LSB and join us in advancing this exciting frontier!
 ## Key Features
 
@@ -11,6 +21,7 @@ Latency Sensitive Benchmarks (LSB) are specifically designed to evaluate LLM Age
 
 Experience how LSB can help you benchmark and improve your LLM agents in truly challenging, real-time environments!
 ## Visualization
+Competitive Games: Faster one wins!!!!
 https://github.com/user-attachments/assets/c69571df-f109-4e92-9e60-60a9cd7933f2
 ## Contents
 - [Installation](#installation)
