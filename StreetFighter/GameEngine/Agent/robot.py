@@ -78,13 +78,16 @@ class Robot(metaclass=abc.ABCMeta):
         only_punch: bool = False,
         temperature: float = 0.7,
         model: str = "mistral:mistral-large-latest",
-        player_nb: int = 0,  # 0 means not specified
+        player_nb: int = 0,  # 0 means not specified    
         delay: float = 0.0,
         local_model = None,
         tokenizer = None,
         serving_method = None,
         socket_config: SocketConfig = None,
         device: str = "cuda",
+        host: str = "http://localhost",
+        port: int = 8001,
+        api_key: str = "None",
     ):
         self.action_space = action_space
         self.character = character
@@ -111,6 +114,9 @@ class Robot(metaclass=abc.ABCMeta):
         self.serving_method = serving_method
         self.socket_config = socket_config
         self.device = device
+        self.host = host
+        self.port = port
+        self.api_key = api_key
     
     def act(self) -> int:
         """
@@ -171,7 +177,7 @@ class Robot(metaclass=abc.ABCMeta):
         start = time.time()
         next_steps_from_llm = self.get_moves_from_llm()
         end = time.time()
-        logger.debug(f"Time to get moves from LLM: {end - start}s")
+        logger.info(f"Time to get moves from LLM: {end - start}s")
         next_buttons_to_press = [
             button
             for combo in next_steps_from_llm
@@ -247,7 +253,7 @@ class Robot(metaclass=abc.ABCMeta):
 
                 logger.debug(f"Next moves: {valid_moves}")
                 return valid_moves
-        elif self.serving_method == "huggingface" or self.serving_method == "vllm":
+        elif self.serving_method == "huggingface" or self.serving_method == "vllm" or self.serving_method == "sglang":
             result = self.call_llm_local()
             matches = re.findall(r"- ([\w ]+)", result)
             moves = ["".join(match) for match in matches]
@@ -328,6 +334,14 @@ class TextRobot(Robot):
             import sglang as sgl
             self.sampling_params = {"temperature": 0.0}
             self.local_model = sgl.SGLang(model=self.model)
+    def init_client(self):
+        from openai import OpenAI
+        if self.serving_method == "vllm" or self.serving_method == "sglang":
+            print("url:", f"{self.host}:{self.port}/v1")
+            self.client = OpenAI(
+                base_url = f"{self.host}:{self.port}/v1",
+                api_key = self.api_key,
+            )
         
     def observe(self, observation: dict, actions: dict, reward: float):
         """
@@ -490,9 +504,9 @@ To increase your score, move toward the opponent and attack the opponent. To pre
         max_tokens: int = 100,
         top_p: float = 1.0,
     ):
-        print(f"call local llm")
+        # print(f"call local llm")
         move_list = "- " + "\n - ".join([move for move in META_INSTRUCTIONS])
-        prompt_template = [
+        prompt = [
             {"role": "system", "content": BACKGROUND(self.character) + HINT_KEN()},
             {
                 "role": "user",
@@ -500,17 +514,18 @@ To increase your score, move toward the opponent and attack the opponent. To pre
                 + "\nYour Response:\n",
             },
         ]
-        if "Qwen3" in self.model:
-            prompt = self.tokenizer.apply_chat_template(
-                prompt_template,
-                tokenize=False,
-                enable_thinking=False,
-            )
-        else:
-            prompt = self.tokenizer.apply_chat_template(
-                prompt_template,
-                tokenize=False
-            )
+        if self.serving_method == "huggingface":
+            if "Qwen3" in self.model:
+                prompt = self.tokenizer.apply_chat_template(
+                    prompt,
+                    tokenize=False,
+                    enable_thinking=False,
+                )
+            else:
+                prompt = self.tokenizer.apply_chat_template(
+                    prompt,
+                    tokenize=False
+                )
         if self.serving_method == "huggingface":
             prompt_encoded = self.tokenizer(prompt, return_tensors="pt").to(self.device)
             # Generate the response
@@ -524,23 +539,29 @@ To increase your score, move toward the opponent and attack the opponent. To pre
             # 只取新生成的部分
             generated_ids = response[0][prompt_length:]
             text = self.tokenizer.decode(generated_ids, skip_special_tokens=True)
-        elif self.serving_method == "vllm":
+        elif self.serving_method == "vllm" or self.serving_method == "sglang":
             # vllm 只支持字符串prompt
-            outputs = self.local_model.generate(
-                prompt,
-                sampling_params=self.sampling_params
+            # outputs = self.local_model.generate(
+            #     prompt,
+            #     sampling_params=self.sampling_params
+            # )
+            # print("client ask")
+            if "Qwen3" in self.model:
+                extra_body = {
+                    "max_tokens": max_tokens,
+                    "chat_template_kwargs": {"enable_thinking": False},
+                }
+            else:
+                extra_body = {
+                    "max_tokens": max_tokens,
+                }
+            completion = self.client.chat.completions.create(
+                model=self.model,
+                messages=prompt,
+                stream=False,
+                extra_body=extra_body
             )
-            # vllm的outputs是一个列表，每个元素有 .outputs[0].text
-            # 只取生成内容（不含prompt）
-            print("outputs of vllm:", outputs)
-            text = outputs[0].outputs[0].text
-        elif self.serving_method == "sglang":
-            # sglang 只支持字符串prompt
-            outputs = self.local_model.generate(
-                prompt,
-                **self.sampling_params
-            )
-            # sglang的outputs通常是字符串
-            text = outputs['text']
-        print("-----------response of model:", text)
+            text = completion.choices[0].message.content
+
+        # print("-----------response of model:", text)
         return text

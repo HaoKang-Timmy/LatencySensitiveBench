@@ -1,0 +1,1 @@
+CUDA_VISIBLE_DEVICES=0 python -m sglang.launch_server --model-path Qwen/Qwen3-4B --port 8002
