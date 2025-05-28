@@ -1,5 +1,5 @@
 # LSB: Latency Sensitive Benchmarks for LLM Agents.
-**[Paper (Win Fast or Lose Slow)](https://arxiv.org/abs/2505.19481) | [Website(Competitve Agents)](https://haokang-timmy.github.io/CompetitiveAgents/)**
+**[Paper (Win Fast or Lose Slow)](https://arxiv.org/abs/2505.19481) | [Website(Competitve Agents)](https://www.competitive-agent.com/)**
 <p align="left"><img width="100%" src="./Figs/FiguresTogether.png"></p><br/>
 <!-- <p align="right"><img width="40%" src="./Figs/TimeSensitiveTask.png"></p><br/>
 <div style="display: flex; justify-content: center; align-items: center; gap: 2%;">
