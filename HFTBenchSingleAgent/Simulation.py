@@ -17,7 +17,8 @@ if __name__ == "__main__":
         stock_names=stock_names,
         step_size_sec=SIM_CONFIG["step_size_sec"],
         history_points=SIM_CONFIG["history_points"],
-        history_min_gap_sec=SIM_CONFIG["history_min_gap_sec"]
+        history_min_gap_sec=SIM_CONFIG["history_min_gap_sec"],
+        decay_window=SIM_CONFIG["decay_window"]
     )
 
     agent_configs = [
