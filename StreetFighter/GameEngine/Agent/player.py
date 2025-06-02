@@ -229,6 +229,8 @@ def agent_loop(agent_id: str, player, shared):
     if player.robot.serving_method is not "remote" or player.robot.serving_method is not "api":
         # player.robot.init_local_model()
         player.robot.init_client()
+    if player.robot.serving_method == "huggingface":
+        player.robot.init_local_model()
     if agent_id == "agent_0":
         shared["model_prepare_0"] = True
     else:
