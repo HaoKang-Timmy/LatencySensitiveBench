@@ -61,7 +61,8 @@ GAME_PATH="/fsx-alignment/dedicated-fsx-data-repo-alignment-us-west-2/home/zenhk
 for i in {1..40}; do
     echo "===== Running experiment $i ====="
     diambra -r "$GAME_PATH" run -l python3 run_api.py \
-        --serving-choice sglang \
+        --serving-choice1 sglang \
+        --serving-choice2 sglang \
         --agent1 Qwen/Qwen3-4B \
         --agent2 Qwen/Qwen3-14B \
         --port1 8002 \

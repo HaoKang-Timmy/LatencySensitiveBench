@@ -12,10 +12,17 @@ logger.add(sys.stdout, level="INFO")
 def main():
     parser = argparse.ArgumentParser(description="settings of the game and agent")
     parser.add_argument(
-        "--serving-choice",
+        "--serving-choice1",
         type=str,
         choices=["vllm", "remote", "api","sglang","huggingface"],
-        default="local",
+        default="huggingface",
+        help="Serving mode: local, remote, or api"
+    )
+    parser.add_argument(
+        "--serving-choice2",
+        type=str,
+        choices=["vllm", "remote", "api","sglang","huggingface"],
+        default="huggingface",
         help="Serving mode: local, remote, or api"
     )
     parser.add_argument(
