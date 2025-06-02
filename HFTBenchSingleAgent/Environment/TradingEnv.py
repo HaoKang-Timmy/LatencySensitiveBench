@@ -10,7 +10,8 @@ class TradeMarket:
         stock_names,
         step_size_sec: int = 1, ### minimal observation/trading time
         history_points: int = 20, ### history points for each stock
-        history_min_gap_sec: int = 60 ### minimal gap between two history points
+        history_min_gap_sec: int = 60, ### minimal gap between two history points
+        decay_window: float = 1.5 ### decay window for linear decay
     ):
         self.market_data = {}
         self.agents_trade_in_second = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
@@ -24,7 +25,7 @@ class TradeMarket:
         self.time_cursor = None
         self.trade_time_delay = []
         self.daily_avg_prices = {}  # store the daily average price of each stock
-        self.decay_window = 2 # 2 second for linear decay
+        self.decay_window = decay_window # 2 second for linear decay
 
         stock_times = []
 
@@ -150,29 +151,6 @@ class TradeMarket:
             ####TODO currently only one agent is allowed to trade at a time
             decisions, delay = agents[0].decide_trades(prices_snapshot)
             agents[0].apply_trade(decisions, self, dt, delay)
-            # with Manager() as manager:
-            #     shared_dict = manager.dict()
-            #     timing_dict = manager.dict()
-            #     processes = []
-
-            #     def run_decision(agent, i):
-            #         import time
-            #         start = time.time()
-            #         shared_dict[i] = agent.decide_trades(prices_snapshot)
-            #         timing_dict[i] = time.time() - start
-
-            #     for i, agent in enumerate(triggering_agents):
-            #         p = Process(target=run_decision, args=(agent, i))
-            #         p.start()
-            #         processes.append((p, agent, i))
-
-            #     for p, _, _ in processes:
-            #         p.join()
-
-            #     sorted_indices = sorted(timing_dict.items(), key=lambda x: x[1])
-            #     for rank, (i, _) in enumerate(sorted_indices):
-            #         agent = triggering_agents[i]
-            #         agent.apply_trade(shared_dict[i], self, dt)
 
             if self.time_cursor.strftime("%H:%M:%S") > "15:30:00":
                 print("[🕒] Simulation cutoff reached at 15:30.")
