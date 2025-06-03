@@ -21,14 +21,21 @@ Here we support three kinds of LLM model serving, huggingface transformer, vllm 
 `./GameEngine/Agent/agent.py` init the client and models for LLM agent serving.
 
 # Profile mutiple agent elo rankings
-## How to serve agents with vllm and sglang
+## Serve agents with vllm and sglang
 
 Run two models in sglang/vllm. See `./server_launch_player1.py` and `./server_launch_player2.py`.
 Then start `./test.zsh` to start the competition.
 
 See [vllm](https://docs.vllm.ai/en/stable/serving/openai_compatible_server.html) and [sglang](https://docs.sglang.ai/backend/openai_api_completions.html) for more details.
+## Generate ranking
+Our ranking is based on bradley-terry model.
 
-# How to self define agent and test
+First run `generate_csv.py`, then run `generate_bradley_terry.py`.
+
+## Results on H100
+
+
+# Self define agent
 The function calling is at `call_llm_local` in `./GameEngine/Agent/robot.py`.
 
 The model initialization of vllm and sglang is outside of the gaming, but for huggingface it is in `init_local_model` of `./GameEngine/Agent/robot.py`.

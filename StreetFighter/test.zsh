@@ -63,11 +63,11 @@ for i in {1..40}; do
     diambra -r "$GAME_PATH" run -l python3 run_api.py \
         --serving-choice1 sglang \
         --serving-choice2 sglang \
-        --agent1 Qwen/Qwen3-4B \
-        --agent2 Qwen/Qwen3-14B \
+        --agent1 Qwen/Qwen3-32B \
+        --agent2 Qwen/Qwen3-32B \
         --port1 8002 \
         --port2 8003 \
-        --logdir "4vs14.log"
+        --logdir "32_8bit_vs_32.log"
 
     echo "===== Finished experiment $i ====="
     echo ""

@@ -16,14 +16,14 @@ def main():
         type=str,
         choices=["vllm", "remote", "api","sglang","huggingface"],
         default="huggingface",
-        help="Serving mode: local, remote, or api"
+        help="Serving mode for agent1"
     )
     parser.add_argument(
         "--serving-choice2",
         type=str,
         choices=["vllm", "remote", "api","sglang","huggingface"],
         default="huggingface",
-        help="Serving mode: local, remote, or api"
+        help="Serving mode for agent2"
     )
     parser.add_argument(
         "--agent1",
@@ -45,37 +45,37 @@ def main():
         "--hostname1",
         type=str,
         default="http://localhost",
-        help="Hostname for the remote server"
+        help="Hostname for the remote/local server1"
     )
     parser.add_argument(
         "--hostname2",
         type=str,
         default="http://localhost",
-        help="Hostname for the remote server"
+        help="Hostname for the remote/local server2"
     )
     parser.add_argument(
         "--port1",
         type=int,
         default=8001,
-        help="Port for the remote server"
+        help="Port for the remote/local server1"
     )
     parser.add_argument(
         "--port2",
         type=int,
         default=8002,
-        help="Port for the remote server"
+        help="Port for the remote/local server2"
     )
     parser.add_argument(
         "--device1",
         type=str,
         default="cuda:0",
-        help="Device to use"
+        help="Device to use for agent1"
     )
     parser.add_argument(
         "--device2",
         type=str,
         default="cuda:1",
-        help="Device to use"
+        help="Device to use for agent2"
     )
     
     args = parser.parse_args()
@@ -87,7 +87,7 @@ def main():
             model=args.agent1,
             host= args.hostname1,
             port=args.port1,
-            serving_method=args.serving_choice,
+            serving_method=args.serving_choice1,
             device=args.device1,
         ),
         player_2=Player2(
@@ -95,7 +95,7 @@ def main():
             model=args.agent1,
             host= args.hostname2,
             port=args.port2,
-            serving_method=args.serving_choice,
+            serving_method=args.serving_choice2,
             device=args.device2,
         ),
     )
