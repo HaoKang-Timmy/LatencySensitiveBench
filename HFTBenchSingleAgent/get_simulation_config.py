@@ -21,7 +21,7 @@ def get_simulation_config():
     parser.add_argument("--stock_names", type=str, nargs="+", default=["AMZN", "NVDA"])
     parser.add_argument("--date_str", type=str, default="2024-08-05")
     parser.add_argument("--json_dir", type=str, default="./data/")
-    parser.add_argument("--agent_count", type=int, required=True, default=1)
+    parser.add_argument("--agent_count", type=int, default=1)
     parser.add_argument("--device_list", type=str, nargs="+", help="List of CUDA devices, one per agent.", default=["cuda:0", "cuda:1"])
     parser.add_argument("--port", type=int, default=8001)
     parser.add_argument("--hostname", type=str, default="http://localhost")

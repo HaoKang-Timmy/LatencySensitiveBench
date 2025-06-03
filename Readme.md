@@ -79,7 +79,7 @@ Here we provide results on two RTX5090. More results on H100 are comming soon.
 
 ### Street Fighter
 
-| Model Parameter Size | Bitwidth Avg | Latency (ms) ↓ | ELO Score ↑ |
+| Model Parameter Size | Bitwidth Avg | Latency (ms) ↓ | Ranking Score ↑ |
 |----------------------|--------------|----------------|-------------|
 | 3B (ours)            | 6.8          | 195            | **5.99**    |
 | 7B (ours)            | 7.2          | 354            | 2.33        |
@@ -91,7 +91,7 @@ Here we provide results on two RTX5090. More results on H100 are comming soon.
 
 ## Self-define Agent
 
-Comming soon.
+We welcome any design of agents tested on hardware. Please create a issue/request including your code and serving hardware.
 
 ## Reference
 If you find Win Fast or Lose slow useful or relevant to your research, please kindly cite our paper:
