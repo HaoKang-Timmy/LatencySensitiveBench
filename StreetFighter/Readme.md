@@ -34,6 +34,21 @@ First run `generate_csv.py`, then run `generate_bradley_terry.py`.
 
 ## Results on H100
 
+We also provide Bradley-Terry model strength rankings based on comprehensive battle results. The Bradley-Terry model uses maximum likelihood estimation to determine optimal rankings from pairwise comparisons. We are using Qwen3 model zoo.
+
+| Rank | Model Size | Bitwidth | Bradley-Terry Score | Win-Loss Record |
+|------|------------|----------|-------------------|-----------------|
+| 1    | 14B_8bit   | 8        | **0.824**         | 25W-15L         |
+| 2    | 32       | 16       | **0.549**         | 30W-10L         |
+| 3    | 14B        | 16       | **0.315**         | 80W-59L         |
+| 4    | 4B_8bit    | 8        | **0.299**         | 32W-8L          |
+| 5    | 32B        | 16       | **0.114**         | 18W-22L         |
+| 6    | 8B         | 16       | **0.025**         | 58W-34L         |
+| 7    | 8B_8bit    | 8        | **-0.487**        | 15W-25L         |
+| 8    | 32B_8bit  | 8        | **-0.549**        | 10W-30L         |
+| 9    | 4B         | 16       | **-1.089**        | 24W-89L         |
+
+**Note:** Higher Bradley-Terry scores indicate stronger models. The score represents the log-odds of winning against an average opponent. Models with positive scores are above average, while negative scores indicate below-average performance.
 
 # Self define agent
 The function calling is at `call_llm_local` in `./GameEngine/Agent/robot.py`.
